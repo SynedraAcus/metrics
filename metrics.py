@@ -16,7 +16,7 @@ def label_parent(k, j):
     """
     if j > k:
         k, j = j, k
-    return int(k * (k-1) / 2 + j + 1)
+    return int(k * (k-1) // 2 + j + 1)
 
 
 def annotate_rooted_tree(tree):

@@ -4,7 +4,9 @@ The basic idea is from "Metric on phylogenetic tree shapes". All the labels are
 stored in node.
 """
 
+from collections import defaultdict
 from dendropy import Tree
+from math import sqrt
 
 
 def label_parent(k, j):
@@ -50,6 +52,7 @@ def get_root_label(tree):
         return tree.seed_node.annotations['CP-label'].value
 
 
+# TODO: call annotate_*_tree in get_*_vector if it's not set already
 def get_rooted_vector(tree):
     """
     For an annotated rooted tree, collect labels into a vector
@@ -144,3 +147,38 @@ def get_unrooted_vector(tree):
         if node is not tree.seed_node:
             r += list(node.annotations['CPM-labels'].value.values())
     return list(sorted(r))
+
+
+# Operations on vectors
+def vector_dict(vector):
+    """
+    Return a vector dictionary.
+    
+    The dictionary is a defaultdict that, for each subtree label, returns the
+    count of this label in vector. For absent labels, returns zero.
+    :param vector:
+    :return:
+    """
+    r = defaultdict(lambda: 0)
+    for element in vector:
+        r[element] += 1
+    return r
+
+
+def euclidean(d1, d2):
+    """
+    Return the euclidean distance between two vector dicts.
+    
+    Does not do any sort of normalization. That would probably make sense as the
+    operation on vector(s) before any comparison between trees anyway.
+    :param d1: vector dict for a tree
+    :param d2: vector dict for a tree
+    :return:
+    """
+    square_sum = 0
+    s1 = set(d1.keys())
+    key_set = s1.union(set(d2.keys()))
+    print(d1, d2, key_set)
+    for label in key_set:
+        square_sum += (d1[label] - d2[label])**2
+    return sqrt(square_sum)

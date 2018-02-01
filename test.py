@@ -7,7 +7,7 @@ from dendropy import Tree
 t1 = Tree.get(data='((A, (B, C)), (D,E));', schema='newick')
 t2 = Tree.get(data='((A, B), (C, D));', schema='newick')
 annotate_unrooted_tree(t1)
-annotate_unrooted_tree(t2)
+# annotate_unrooted_tree(t2)
 print(euclidean(vector_dict(get_unrooted_vector(t1)),
                 vector_dict(get_unrooted_vector(t2))))
 

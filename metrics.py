@@ -52,7 +52,6 @@ def get_root_label(tree):
         return tree.seed_node.annotations['CP-label'].value
 
 
-# TODO: call annotate_*_tree in get_*_vector if it's not set already
 def get_rooted_vector(tree):
     """
     For an annotated rooted tree, collect labels into a vector
@@ -133,6 +132,10 @@ def annotate_unrooted_tree(tree):
             # earlier, but for this prototype it will leave the analysis iff
             # both it and all its neighbours are complete
             queue.append(node)
+    # Root 'CPM-labels' is set to -1 (int) after annotation to indicate that the
+    # tree was labeled for calling `annotate_unrooted_tree` from
+    # `get_unrooted_vector` by default
+    root.annotations['CPM-labels'].value = -1
 
 
 def get_unrooted_vector(tree):
@@ -142,6 +145,8 @@ def get_unrooted_vector(tree):
     :param tree: 
     :return: 
     """
+    if not tree.seed_node.annotations['CPM-labels'].value == -1:
+        annotate_unrooted_tree(tree)
     r = []
     for node in tree.preorder_node_iter():
         if node is not tree.seed_node:

@@ -1,9 +1,10 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python3.6
 
 import sys
 from argparse import ArgumentParser
 from dendropy import TreeList
-from metrics import get_unrooted_vector
+from metrics import get_unrooted_vector, get_rooted_vector
+from time import time
 
 parser = ArgumentParser('Make MDS for tropical and USA flu trees')
 parser.add_argument('-t', action='store_true',
@@ -14,7 +15,13 @@ if args.t:
     print('Processing tropical trees', file=sys.stderr)
     tropical_trees = TreeList.get_from_path('data/flu_tropical.nwk',
                                             schema='newick')
-    tropical_vectors = [get_unrooted_vector(x) for x in tropical_trees]
+    print('Loaded trees')
+    tropical_vectors = []
+    for tree in tropical_trees:
+        start = time()
+        tropical_vectors.append(get_rooted_vector(tree))
+        print(f'Processed a tree in {time()-start} seconds')
+        quit()
     with open('data/tropical_vectors', mode='w') as tv:
         for vector in tropical_vectors:
             print(vector, file=tv)

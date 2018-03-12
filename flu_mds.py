@@ -1,4 +1,4 @@
-#! /usr/bin/env python3.6
+#! /usr/bin/env python3
 
 import sys
 from argparse import ArgumentParser
@@ -15,21 +15,22 @@ if args.t:
     print('Processing tropical trees', file=sys.stderr)
     tropical_trees = TreeList.get_from_path('data/flu_tropical.nwk',
                                             schema='newick')
-    print('Loaded trees', file=sys.stderr)
+    print('Loaded {} trees'.format(len(tropical_trees)), file=sys.stderr)
     with open('data/tropical_vectors', mode='w') as tv:
         for tree in tropical_trees:
             start = time()
             vector = get_unrooted_vector(tree)
-            print(f'Processed a tree in {time()-start} seconds', file=sys.stderr)
+            print('Processed a tree in {} seconds'.format(time()-start),
+                  file=sys.stderr)
             print(vector, file=tv)
     print('Done\nProcessing USA trees', file=sys.stderr)
     usa_trees = TreeList.get_from_path('data/flu_usa.nwk')
-    print('Loaded trees', file=sys.stderr)
+    print('Loaded {} trees'.format(len(usa_trees)), file=sys.stderr)
     with open('data/usa_vectors', mode='w') as uv:
         for tree in usa_trees:
             start = time()
             vector = get_unrooted_vector(tree)
-            print(f'Processed a tree in {time()-start} seconds',
+            print('Processed a tree in {} seconds'.format(time()-start),
                   file=sys.stderr)
             print(vector, file=uv)
     print('Done', file=sys.stderr)

@@ -160,7 +160,7 @@ def annotate_unrooted_tree(tree):
     wave = tuple(parents)
     cont = True
     while cont:
-        print(f'Wave of {len(wave)} node(s)', file=stderr)
+        print('Wave of {} node(s)'.format(len(wave)), file=stderr)
         print(wave, file=stderr)
         next_wave = _process_node_wave(wave)
         if len(next_wave) > 0:

@@ -1,4 +1,4 @@
-#! /usr/bin/env python3.6
+#! /usr/bin/env python3
 
 from metrics import get_rooted_vector, annotate_unrooted_tree,\
     get_unrooted_vector, vector_dict, euclidean

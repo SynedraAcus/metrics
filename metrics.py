@@ -6,6 +6,7 @@ stored in node.
 
 from collections import defaultdict, deque
 from dendropy import Tree
+from gmpy2 import mpz
 from math import sqrt
 from sys import stderr
 
@@ -31,7 +32,7 @@ def annotate_rooted_tree(tree):
     assert isinstance(tree, Tree)
     for node in tree.postorder_node_iter():
         if not node.child_nodes():
-            node.annotations['CP-label'].value = 1
+            node.annotations['CP-label'].value = mpz(1)
         else:
             k, j = (x.annotations['CP-label'].value for x in node.child_nodes())
             label = label_parent(k, j)
@@ -137,7 +138,7 @@ def annotate_unrooted_tree(tree):
         if not node.annotations['CPM-labels'].value:
             node.annotations['CPM-labels'].value = {x: None for x in get_neighbours(node)}
         if not node.child_nodes():
-            node.parent_node.annotations['CPM-labels'].value[node] = 1
+            node.parent_node.annotations['CPM-labels'].value[node] = mpz(1)
             parents.add(node.parent_node)
     # A hack around a root node, which does not really exist, but which dendropy
     # creates anyway.

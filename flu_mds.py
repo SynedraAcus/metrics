@@ -19,7 +19,7 @@ if args.t:
     tropical_vectors = []
     for tree in tropical_trees:
         start = time()
-        tropical_vectors.append(get_rooted_vector(tree))
+        tropical_vectors.append(get_unrooted_vector(tree))
         print(f'Processed a tree in {time()-start} seconds')
         quit()
     with open('data/tropical_vectors', mode='w') as tv:

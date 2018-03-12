@@ -15,21 +15,22 @@ if args.t:
     print('Processing tropical trees', file=sys.stderr)
     tropical_trees = TreeList.get_from_path('data/flu_tropical.nwk',
                                             schema='newick')
-    print('Loaded trees')
-    tropical_vectors = []
-    for tree in tropical_trees:
-        start = time()
-        tropical_vectors.append(get_rooted_vector(tree))
-        print(f'Processed a tree in {time()-start} seconds')
-        quit()
+    print('Loaded trees', file=sys.stderr)
     with open('data/tropical_vectors', mode='w') as tv:
-        for vector in tropical_vectors:
+        for tree in tropical_trees:
+            start = time()
+            vector = get_unrooted_vector(tree)
+            print(f'Processed a tree in {time()-start} seconds', file=sys.stderr)
             print(vector, file=tv)
     print('Done\nProcessing USA trees', file=sys.stderr)
     usa_trees = TreeList.get_from_path('data/flu_usa.nwk')
-    usa_vectors = [get_unrooted_vector(x) for x in usa_trees]
+    print('Loaded trees', file=sys.stderr)
     with open('data/usa_vectors', mode='w') as uv:
-        for vector in usa_vectors:
+        for tree in usa_trees:
+            start = time()
+            vector = get_unrooted_vector(tree)
+            print(f'Processed a tree in {time()-start} seconds',
+                  file=sys.stderr)
             print(vector, file=uv)
     print('Done', file=sys.stderr)
 else:

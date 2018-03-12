@@ -8,8 +8,5 @@ from time import time
 t2 = Tree.get(data='((A, B), (C, D));', schema='newick')
 t1 = Tree.get(data='((A, (B, C)), (D,E));', schema='newick')
 start = time()
-annotate_unrooted_tree(t1)
+print(get_rooted_vector(t2))
 print(time()-start)
-# print(euclidean(vector_dict(get_unrooted_vector(t1)),
-#                 vector_dict(get_unrooted_vector(t2))))
-

@@ -6,6 +6,7 @@ stored in node.
 
 from collections import defaultdict, deque
 from dendropy import Tree
+from gmpy2 import mpz
 from math import sqrt
 from sys import stderr
 
@@ -31,7 +32,7 @@ def annotate_rooted_tree(tree):
     assert isinstance(tree, Tree)
     for node in tree.postorder_node_iter():
         if not node.child_nodes():
-            node.annotations['CP-label'].value = 1
+            node.annotations['CP-label'].value = mpz(1)
         else:
             k, j = (x.annotations['CP-label'].value for x in node.child_nodes())
             label = label_parent(k, j)
@@ -85,8 +86,14 @@ def get_neighbours(node):
 
 
 def _process_node_wave(wave):
-    # It only makes sense to process nodes that were changed
-    # on a previous iteration
+    """
+    Use a bunch of nodes to try and give CPM-labels to their neighbours.
+
+    Takes an iterable of nodes (assumes them to have the 'CPM-labels'
+    annotation) and returns a tuple of nodes that got some new labels this run.
+    :param wave:
+    :return:
+    """
     next_wave = set()
     for node in wave:
         for neighbour in node.annotations['CPM-labels'].value.keys():
@@ -106,6 +113,7 @@ def _process_node_wave(wave):
             except KeyError as e:
                 # There is a heisenbug when some nodes get incorrect keys for
                 # 'CPM-labels' annotation. This is a poor man's debugger for it.
+                # Remove this if the bug doesn't show up again.
                 if neighbour.child_nodes():
                     print(neighbour.child_nodes())
                 else:
@@ -125,17 +133,13 @@ def annotate_unrooted_tree(tree):
     :param tree: 
     :return: 
     """
-    queue = deque()
     parents = set()
     for node in tree.preorder_node_iter():
         if not node.annotations['CPM-labels'].value:
             node.annotations['CPM-labels'].value = {x: None for x in get_neighbours(node)}
         if not node.child_nodes():
-            node.parent_node.annotations['CPM-labels'].value[node] = 1
+            node.parent_node.annotations['CPM-labels'].value[node] = mpz(1)
             parents.add(node.parent_node)
-    # for node in parents:
-    #     if len([x for x in node.annotations['CPM-labels'].value.values() if x]) == 2:
-    #         queue.append(node)
     # A hack around a root node, which does not really exist, but which dendropy
     # creates anyway.
     root = tree.seed_node
@@ -144,11 +148,15 @@ def annotate_unrooted_tree(tree):
     del(a.annotations['CPM-labels'].value[root])
     b.annotations['CPM-labels'].value[a] = b.annotations['CPM-labels'].value[root]
     del(b.annotations['CPM-labels'].value[root])
-    # if root in queue:
-    #     queue.remove(root)
     if root in parents:
         parents.remove(root)
-    # print(queue)
+    # The basic idea is as follows: on every iteration, keep a list of nodes
+    # that had at least one CPM-label set. On the next iteration, try to use
+    # these nodes to give labels to some more nodes and keep a similar list.
+    # Repeat until there are no nodes affected, which should be only when the
+    # entire tree is marked up (not proven formally, but seems to work on the
+    # smaller trees).
+    # The initial set is composed from leaves' parents who get 1s from leaves.
     wave = tuple(parents)
     cont = True
     while cont:
@@ -159,53 +167,9 @@ def annotate_unrooted_tree(tree):
             wave = next_wave
         else:
             cont = False
-    # # After this point, any time the node needs a value from its neignbour, the
-    # # neighbour has precisely two other neighbours.
-    # while len(queue) > 0:
-    #     node = queue.popleft()
-    #     stderr.write('Processing\n')
-    #     rm_permission = 0
-    #     for neighbour in node.annotations['CPM-labels'].value.keys():
-    #         if neighbour.annotations['CPM-labels'].value[node] is not None:
-    #             # This node has already set the value for neighbour in question
-    #             rm_permission += 1
-    #         else:
-    #             others = tuple(node.annotations['CPM-labels'].value[x]
-    #                            for x in node.annotations['CPM-labels'].value
-    #                            if x != neighbour and node.annotations['CPM-labels'].value[x])
-    #             if len(others) == 2:
-    #                 stderr.write('Setting value\n')
-    #                 neighbour.annotations['CPM-labels'].value[node] = \
-    #                         label_parent(*others)
-    #                 if len([x for x in neighbour.annotations['CPM-labels'].value.values() if x]) == 2:
-    #                     queue.append(neighbour)
-    #                 rm_permission += 1
-    #         # if node.annotations['CPM-labels'].value[neighbour]:
-    #         #     # The value is already set
-    #         #     # Check if that neighbour is complete
-    #         #     if None not in neighbour.annotations['CPM-labels'].value.values():
-    #         #         rm_permission += 1
-    #         #     continue
-    #         # # Node can set its value from a particular neignbour only if said
-    #         # # neighbour has values from its other two neighbours already set.
-    #         # cousins = neighbour.annotations['CPM-labels'].value
-    #         # cousin_values = tuple(cousins[x] for x in cousins if x != node)
-    #         # if cousin_values and all(cousin_values):
-    #         #     node.annotations['CPM-labels'].value[neighbour] = \
-    #         #         label_parent(*cousin_values)
-    #     if rm_permission < 3:
-    #             # or None in node.annotations['CPM-labels'].value.keys():
-    #         # Either the node or one of its neighbours is incomplete. Cannot
-    #         # leave the queue just yet
-    #         # Probably there are some conditions when the node can be removed
-    #         # earlier, but for this prototype it will leave the analysis iff
-    #         # both it and all its neighbours are complete
-    #         queue.append(node)
-    #     else:
-    #         stderr.write('Removing node from queue\n')
     # Root 'CPM-labels' is set to -1 (int) after annotation to indicate that the
-    # tree was labeled for calling `annotate_unrooted_tree` from
-    # `get_unrooted_vector` by default
+    # tree was labeled for calling or not calling `annotate_unrooted_tree` from
+    # `get_unrooted_vector`.
     root.annotations['CPM-labels'].value = -1
 
 

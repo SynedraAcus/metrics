@@ -3,11 +3,13 @@
 from argparse import ArgumentParser
 from dendropy import TreeList
 from metrics import get_rooted_vector, get_unrooted_vector
+from multiprocessing import Pool
+from os import getpid, cpu_count
 from sys import stderr
 from time import time
 
 
-def write_tree(tree, function, filename):
+def write_tree(tree, func, filename):
     """
     Get a vector for a given tree and write it into a file.
     
@@ -15,12 +17,16 @@ def write_tree(tree, function, filename):
     :param tree:
     :return:
     """
+    # Unpacking an argument tuple. Which is a tuple because of Pool.map()
     start = time()
-    vector = function(tree)
+    vector = func(tree)
     with open(filename, mode='w') as outfile:
         for x in vector:
             print(str(x), file=outfile)
-    print('Processed a tree in {}'.format(str(time()-start)), file=stderr)
+    print('Processed vector {} in {} seconds by {}'.format(filename,
+                                                           str(time()-start),
+                                                           getpid()),
+          file=stderr)
             
             
 parser = ArgumentParser('Return CP- or CPM-vectors for a set of trees\n'+
@@ -30,13 +36,22 @@ parser.add_argument('-t', type=str, help='Tree file in Newick format')
 parser.add_argument('-u', action='store_true',
                     help='Produce unrooted (CPM) labelling')
 parser.add_argument('-d', type=str, help='Output directory')
+parser.add_argument('--threads', type=int, default=0,
+                    help='Number of threads. Defaults to processor number')
 args = parser.parse_args()
 
+start = time()
+process_count = args.threads if args.threads else cpu_count()
 file_mask = args.t.split('.')[0]+'_tree{}.vector'
 trees = TreeList.get_from_path(args.t, schema='newick')
 print('Loaded {} trees'.format(len(trees)), file=stderr)
 counter = 0
 f = args.u and get_unrooted_vector or get_rooted_vector
-for tree in trees:
-    counter += 1
-    write_tree(tree, f, file_mask.format(str(counter)))
+func_args = [(trees[i], f, file_mask.format(str(i))) for i in range(len(trees))]
+p = Pool(2)
+_ = p.starmap(write_tree, func_args, chunksize=1)
+print('Processed {} trees in {} seconds using {} processes'.format(
+                                                                str(len(trees)),
+                                                                time()-start,
+                                                                process_count),
+    file=stderr)

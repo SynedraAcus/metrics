@@ -48,7 +48,7 @@ print('Loaded {} trees'.format(len(trees)), file=stderr)
 counter = 0
 f = args.u and get_unrooted_vector or get_rooted_vector
 func_args = [(trees[i], f, file_mask.format(str(i))) for i in range(len(trees))]
-p = Pool(2)
+p = Pool(process_count)
 _ = p.starmap(write_tree, func_args, chunksize=1)
 print('Processed {} trees in {} seconds using {} processes'.format(
                                                                 str(len(trees)),

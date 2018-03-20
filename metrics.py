@@ -133,13 +133,10 @@ def annotate_unrooted_tree(tree):
     :param tree: 
     :return: 
     """
-    parents = set()
+    # Creating correct CPM-labels dicts for each node
     for node in tree.preorder_node_iter():
         if not node.annotations['CPM-labels'].value:
             node.annotations['CPM-labels'].value = {x: None for x in get_neighbours(node)}
-        if not node.child_nodes():
-            node.parent_node.annotations['CPM-labels'].value[node] = mpz(1)
-            parents.add(node.parent_node)
     # A hack around a root node, which does not really exist, but which dendropy
     # creates anyway.
     root = tree.seed_node
@@ -148,8 +145,14 @@ def annotate_unrooted_tree(tree):
     del(a.annotations['CPM-labels'].value[root])
     b.annotations['CPM-labels'].value[a] = b.annotations['CPM-labels'].value[root]
     del(b.annotations['CPM-labels'].value[root])
-    if root in parents:
-        parents.remove(root)
+    # Populating the initial CPM labels for leaf parents
+    parents = set()
+    for node in tree.leaf_node_iter():
+        # Each node should have only one parent, but these being dicts I cannot
+        # just address neighbours[0]
+        for parent in node.annotations['CPM-labels'].value:
+            parent.annotations['CPM-labels'].value[node] = mpz(1)
+            parents.add(parent)
     # The basic idea is as follows: on every iteration, keep a list of nodes
     # that had at least one CPM-label set. On the next iteration, try to use
     # these nodes to give labels to some more nodes and keep a similar list.

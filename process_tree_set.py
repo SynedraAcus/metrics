@@ -40,7 +40,7 @@ parser.add_argument('--processes', type=int, default=0,
 args = parser.parse_args()
 
 start = time()
-process_count = args.threads if args.threads else cpu_count()
+process_count = args.processes if args.threads else cpu_count()
 print('Using {} processes'.format(process_count), file=stderr)
 file_mask = args.t.split('.')[0]+'_tree{}.vector'
 trees = TreeList.get_from_path(args.t, schema='newick')

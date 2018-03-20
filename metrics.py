@@ -105,15 +105,12 @@ def _process_node_wave(wave):
                                    node.annotations['CPM-labels'].value[x])
                     if len(others) == 2:
                         v = label_parent(*others)
-                        stderr.write('Setting value\n')
                         neighbour.annotations['CPM-labels'].value[node] = v
                         next_wave.add(neighbour)
-                    else:
-                        stderr.write('Skipping\n')
             except KeyError as e:
                 # There is a heisenbug when some nodes get incorrect keys for
                 # 'CPM-labels' annotation. This is a poor man's debugger for it.
-                # Remove this if the bug doesn't show up again.
+                # TODO: Remove this if the bug doesn't show up again.
                 if neighbour.child_nodes():
                     print(neighbour.child_nodes())
                 else:
@@ -163,8 +160,6 @@ def annotate_unrooted_tree(tree):
     wave = tuple(parents)
     cont = True
     while cont:
-        print('Wave of {} node(s)'.format(len(wave)), file=stderr)
-        print(wave, file=stderr)
         next_wave = _process_node_wave(wave)
         if len(next_wave) > 0:
             wave = next_wave

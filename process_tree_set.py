@@ -35,13 +35,13 @@ parser = ArgumentParser('Return CP- or CPM-vectors for a set of trees\n'+
 parser.add_argument('-t', type=str, help='Tree file in Newick format')
 parser.add_argument('-u', action='store_true',
                     help='Produce unrooted (CPM) labelling')
-parser.add_argument('-d', type=str, help='Output directory')
-parser.add_argument('--threads', type=int, default=0,
-                    help='Number of threads. Defaults to processor number')
+parser.add_argument('--processes', type=int, default=0,
+                    help='Number of processes. Defaults to processor number')
 args = parser.parse_args()
 
 start = time()
 process_count = args.threads if args.threads else cpu_count()
+print('Using {} processes'.format(process_count), file=stderr)
 file_mask = args.t.split('.')[0]+'_tree{}.vector'
 trees = TreeList.get_from_path(args.t, schema='newick')
 print('Loaded {} trees'.format(len(trees)), file=stderr)
@@ -54,4 +54,4 @@ print('Processed {} trees in {} seconds using {} processes'.format(
                                                                 str(len(trees)),
                                                                 time()-start,
                                                                 process_count),
-    file=stderr)
+      file=stderr)

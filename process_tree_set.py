@@ -2,7 +2,8 @@
 
 from argparse import ArgumentParser
 from dendropy import TreeList
-from metrics import get_rooted_vector, get_unrooted_vector
+from metrics import get_rooted_vector, get_unrooted_vector, \
+        annotate_rooted_tree, annotate_unrooted_tree
 from multiprocessing import Pool
 from os import getpid, cpu_count
 from sys import stderr
@@ -19,10 +20,15 @@ def write_tree(tree, func, filename):
     """
     # Unpacking an argument tuple. Which is a tuple because of Pool.map()
     start = time()
-    vector = func(tree)
+    func(tree)
     with open(filename, mode='w') as outfile:
-        for x in vector:
-            print(str(x), file=outfile)
+        for node in tree.preorder_node_iter():
+            if func == annotate_unrooted_tree:
+                for key in node.annotations['CPM-labels'].value:
+                    print(str(node.annotations['CPM-labels'].value[key]),
+                          file=outfile)
+            else:
+                print(str(node.annotations['CP-label'].value))
     print('Processed vector {} in {} seconds by {}'.format(filename,
                                                            str(time()-start),
                                                            getpid()),

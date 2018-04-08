@@ -216,7 +216,8 @@ def euclidean(d1, d2):
     square_sum = 0
     s1 = set(d1.keys())
     key_set = s1.union(set(d2.keys()))
-    print(d1, d2, key_set)
     for label in key_set:
-        square_sum += (d1[label] - d2[label])**2
+        a = d1[label] if label in d1 else 0
+        b = d2[label] if label in d2 else 0
+        square_sum += (a - b)**2
     return sqrt(square_sum)

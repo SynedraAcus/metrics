@@ -24,11 +24,14 @@ def write_tree(tree, func, filename):
     with open(filename, mode='w') as outfile:
         for node in tree.preorder_node_iter():
             if func == annotate_unrooted_tree:
-                for key in node.annotations['CPM-labels'].value:
-                    print(str(node.annotations['CPM-labels'].value[key]),
-                          file=outfile)
+                if not isinstance(node.annotations['CPM-labels'].value, int):
+                    # The int thing is for skipping the root value
+                    for key in node.annotations['CPM-labels'].value:
+                        print(str(node.annotations['CPM-labels'].value[key]),
+                              file=outfile)
             else:
-                print(str(node.annotations['CP-label'].value))
+                print(str(node.annotations['CP-label'].value),
+                      file=outfile)
     print('Processed vector {} in {} seconds by {}'.format(filename,
                                                            str(time()-start),
                                                            getpid()),
@@ -52,7 +55,7 @@ file_mask = args.t.split('.')[0]+'_tree{}.vector'
 trees = TreeList.get_from_path(args.t, schema='newick')
 print('Loaded {} trees'.format(len(trees)), file=stderr)
 counter = 0
-f = args.u and get_unrooted_vector or get_rooted_vector
+f = args.u and annotate_unrooted_tree or annotate_rooted_tree
 func_args = [(trees[i], f, file_mask.format(str(i))) for i in range(len(trees))]
 p = Pool(process_count)
 _ = p.starmap(write_tree, func_args, chunksize=1)

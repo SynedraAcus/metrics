@@ -32,6 +32,8 @@ separate directory""")
 parser.add_argument('-d', type=str, nargs='*', help='Vector directories')
 parser.add_argument('-o', type=str, help='Image output filename',
                     default='mds.svg')
+parser.add_argument('-e', type=float, help='MDS epsilon',
+		    default=1e-3)
 args = parser.parse_args()
 
 lengths = {}
@@ -52,7 +54,7 @@ for index, vector in enumerate(vectors):
         vector2 = vectors[index2]
         diss[index][index2] = np.float32(euclidean(vector, vector2))
         diss[index2][index] = diss[index, index2]
-mds = manifold.MDS(dissimilarity='precomputed')
+mds = manifold.MDS(dissimilarity='precomputed', eps=1e-9)
 coords = mds.fit(diss).embedding_
 # TODO: make some solution that does not crash on 6+ colours
 colours = ['red', 'blue', 'green', 'yellow', 'green']

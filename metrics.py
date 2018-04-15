@@ -203,7 +203,7 @@ def vector_dict(vector):
     return r
 
 
-def euclidean(d1, d2):
+def euclidean(d1, d2, process_zeroes = True):
     """
     Return the euclidean distance between two vector dicts.
     
@@ -211,13 +211,20 @@ def euclidean(d1, d2):
     operation on vector(s) before any comparison between trees anyway.
     :param d1: vector dict for a tree
     :param d2: vector dict for a tree
+    :param process_zeroes: if True, values present in one vector but not another
+    are treated as zeroes for the latter vector. If False, they are ignored
     :return:
     """
     square_sum = 0
-    s1 = set(d1.keys())
-    key_set = s1.union(set(d2.keys()))
-    for label in key_set:
-        a = d1[label] if label in d1 else 0
-        b = d2[label] if label in d2 else 0
-        square_sum += (a - b)**2
+    if process_zeroes:
+        s1 = set(d1.keys())
+        key_set = s1.union(set(d2.keys()))
+        for label in key_set:
+            a = d1[label] if label in d1 else 0
+            b = d2[label] if label in d2 else 0
+            square_sum += (a - b)**2
+    else:
+        for label in d1:
+            if label in d2:
+                square_sum += (d1[label]-d2[label])**2
     return sqrt(square_sum)

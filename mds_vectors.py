@@ -37,21 +37,23 @@ parser.add_argument('-z', action='store_true',
 args = parser.parse_args()
 
 lengths = {}
-vectors = []
+files = []
 for dir in args.d:
     if not os.path.exists(dir):
         raise ValueError('Inexistent directory {}'.format(dir))
-    files = glob(dir+'/*.vector')
-    lengths[dir] = len(files)
-    for file in files:
-        vectors.append(dict_from_file(file))
+    dir_files = glob(dir+'/*.vector')
+    lengths[dir] = len(dir_files)
+    files += dir_files
+    # for file in files:
+    #     vectors.append(dict_from_file(file))
 
 diss = np.ndarray(shape=(sum(lengths.values()), sum(lengths.values())),
                   dtype=np.float32)
-for index, vector in enumerate(vectors):
+for index, file in enumerate(files):
     diss[index, index] = 0
-    for index2 in range(index+1, len(vectors)):
-        vector2 = vectors[index2]
+    vector = dict_from_file(file)
+    for index2 in range(index+1, len(files)):
+        vector2 = dict_from_file(files[index2])
         diss[index][index2] = np.float32(euclidean(vector, vector2,
                                                    process_zeroes=args.z))
         diss[index2][index] = diss[index, index2]
@@ -63,8 +65,8 @@ method_colours = {f: colours[d] for d, f in enumerate(args.d)}
 r = 0
 for x, d in enumerate(args.d):
     print(r, method_colours[d])
-    plt.scatter(coords[r:r+len(vectors[x]), 0],
-                coords[r:r+len(vectors[x]), 1],
+    plt.scatter(coords[r:r+lengths[d], 0],
+                coords[r:r+lengths[d], 1],
                 color=method_colours[d],
                 label=d)
     plt.legend(scatterpoints=1)

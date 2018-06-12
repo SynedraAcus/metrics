@@ -4,8 +4,9 @@ from argparse import ArgumentParser
 from glob import glob
 from collections import OrderedDict
 from gmpy2 import mpz
-from sklearn import manifold
 from metrics import euclidean
+from multiprocessing import Pool
+from sklearn import manifold
 import os
 import numpy as np
 
@@ -24,7 +25,19 @@ def dict_from_file(file):
         else:
             r[v] = 1
     return r
-            
+
+  
+def dist_between_files(index1, index2, file1, file2, process_zeroes):
+    """
+    Return distance between two vector files
+    :param file1:
+    :param file2:
+    :return:
+    """
+    vector = dict_from_file(file1)
+    vector2 = dict_from_file(file2)
+    return index1, index2, euclidean(vector, vector2, process_zeroes)
+    
 
 parser = ArgumentParser("""Run MDS of vector sets.
 Expects each vector set to be stored as a collection of *.vector files in a
@@ -63,14 +76,16 @@ if args.d:
         #     vectors.append(dict_from_file(file))
     diss = np.ndarray(shape=(sum(lengths.values()), sum(lengths.values())),
                       dtype=np.float32)
+    queries = []
     for index, file in enumerate(files):
         diss[index, index] = 0
-        vector = dict_from_file(file)
         for index2 in range(index+1, len(files)):
-            vector2 = dict_from_file(files[index2])
-            diss[index][index2] = np.float32(euclidean(vector, vector2,
-                                                       process_zeroes=args.z))
-            diss[index2][index] = diss[index, index2]
+            queries.append([index, index2, file, files[index2], args.z])
+    pool = Pool(os.cpu_count())
+    results = pool.starmap(dist_between_files, queries, chunksize=1)
+    for result in results:
+        diss[result[0], result[1]] = result[2]
+        diss[result[1], result[0]] = result[2]
     mds = manifold.MDS(dissimilarity='precomputed')
     coords = mds.fit(diss).embedding_
     if args.no_draw:

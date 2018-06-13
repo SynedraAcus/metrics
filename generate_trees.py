@@ -24,5 +24,5 @@ bd5 = TreeList([treesim.birth_death_tree(birth_rate=1.0, death_rate=0.2,
                 for _ in range(100)])
 bd5.write_to_path('birth_death5.nwk', schema='newick')
 taxa = TaxonNamespace(['T{}'.format(x) for x in range(1, 101)])
-king = TreeList([treesim.pure_kingman_tree(taxon_namespace=taxa)])
+king = TreeList([treesim.pure_kingman_tree(taxon_namespace=taxa) for _ in range(100)])
 king.write_to_path('kingman.nwk', schema='newick')

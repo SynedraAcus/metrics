@@ -6,10 +6,16 @@ stored in node.
 
 from collections import defaultdict, deque
 from dendropy import Tree
-from gmpy2 import mpz
+from gmpy2 import mpz, to_binary
 from math import sqrt
-from sys import stderr
+import hashlib
 
+
+# CAVEAT FOR HASHING:
+# Hashes computed on different machines can be incompatible because of the
+# endianness issues in gmpy2. It's safer not to rely on hashes provided from
+# elsewhere, instead taking trees as the input and calculating hashes
+# (if needed) on the fly.
 
 def label_parent(k, j):
     """
@@ -21,13 +27,16 @@ def label_parent(k, j):
     return k * (k-1) // 2 + j + 1
 
 
-def annotate_rooted_tree(tree):
+def annotate_rooted_tree(tree, hashing=False):
     """
     Take a rooted phylogenetic tree and annotate it using the Colijn-Plazotta
     metric (precisely as in the paper)
     Modifies the tree object passed to it, returns nothing
-    :param tree: 
-    :return: 
+    :param tree: A tree to be annotated
+    :param hashing: Boolean. If True, the labels are set to SHA256 hashes of the
+    CP-labels instead of the labels themselves. This is useful for large trees
+    where labels get prohibitively high.
+    :return:
     """
     assert isinstance(tree, Tree)
     for node in tree.postorder_node_iter():
@@ -37,6 +46,20 @@ def annotate_rooted_tree(tree):
             k, j = (x.annotations['CP-label'].value for x in node.child_nodes())
             label = label_parent(k, j)
             node.annotations['CP-label'].value = label
+            if hashing:
+                # Hashing children values using SHA256 if necessary
+                # The children values are not gonna be necessary anymore if the
+                # current node value was set
+                for child in node.child_nodes:
+                    child.annotations['CP-label'].value =\
+                        hashlib.sha256(to_binary(child.annotations['CP-label'])
+                                       ).hexdigest()
+    # Hashing root separately because it has no parent
+    if hashing:
+        tree.seed_node.annotations['CP-label'].value = \
+                        hashlib.sha256(to_binary
+                                       (tree.seed_node.annotations['CP-label'])
+                                       ).hexdigest()
 
 
 def get_root_label(tree):
@@ -107,20 +130,6 @@ def _process_node_wave(wave):
                         v = label_parent(*others)
                         neighbour.annotations['CPM-labels'].value[node] = v
                         next_wave.add(neighbour)
-            except KeyError as e:
-                # There is a heisenbug when some nodes get incorrect keys for
-                # 'CPM-labels' annotation. This is a poor man's debugger for it.
-                # TODO: Remove this if the bug doesn't show up again.
-                if neighbour.child_nodes():
-                    print(neighbour.child_nodes())
-                else:
-                    print('No children')
-                if neighbour.parent_node:
-                    print(neighbour.parent_node)
-                else:
-                    print('No parent')
-                print(neighbour.annotations['CPM-labels'])
-                raise e
     return tuple(next_wave)
     
 
@@ -130,6 +139,10 @@ def annotate_unrooted_tree(tree):
     :param tree: 
     :return: 
     """
+    #TODO: Create a graphical output system to test unrooted annotation.
+    # I'm not really sure whether it really works correctly on larger trees. It
+    # should be trivial to check on the image.
+    
     # Creating correct CPM-labels dicts for each node
     for node in tree.preorder_node_iter():
         if not node.annotations['CPM-labels'].value:

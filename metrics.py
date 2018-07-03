@@ -120,16 +120,15 @@ def _process_node_wave(wave):
     next_wave = set()
     for node in wave:
         for neighbour in node.annotations['CPM-labels'].value.keys():
-            try:
-                if neighbour.annotations['CPM-labels'].value[node] is None:
-                    others = tuple(node.annotations['CPM-labels'].value[x]
-                                   for x in node.annotations['CPM-labels'].value
-                                   if x != neighbour and
-                                   node.annotations['CPM-labels'].value[x])
-                    if len(others) == 2:
-                        v = label_parent(*others)
-                        neighbour.annotations['CPM-labels'].value[node] = v
-                        next_wave.add(neighbour)
+            if neighbour.annotations['CPM-labels'].value[node] is None:
+                others = tuple(node.annotations['CPM-labels'].value[x]
+                               for x in node.annotations['CPM-labels'].value
+                               if x != neighbour and
+                               node.annotations['CPM-labels'].value[x])
+                if len(others) == 2:
+                    v = label_parent(*others)
+                    neighbour.annotations['CPM-labels'].value[node] = v
+                    next_wave.add(neighbour)
     return tuple(next_wave)
     
 

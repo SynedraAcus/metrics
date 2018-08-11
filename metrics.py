@@ -133,10 +133,6 @@ def annotate_unrooted_tree(tree):
     :param tree: 
     :return: 
     """
-    #TODO: Create a graphical output system to test unrooted annotation.
-    # I'm not really sure whether it really works correctly on larger trees. It
-    # should be trivial to check on the image.
-    
     # Creating correct CPM-labels dicts for each node
     for node in tree.preorder_node_iter():
         if not node.annotations['CPM-labels'].value:

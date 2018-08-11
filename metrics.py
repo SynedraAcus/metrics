@@ -103,7 +103,7 @@ def get_neighbours(node):
     return r
 
 
-def _process_node_wave(wave):
+def _process_node_wave(wave, hashing=False):
     """
     Use a bunch of nodes to try and give CPM-labels to their neighbours.
 
@@ -120,14 +120,33 @@ def _process_node_wave(wave):
                                for x in node.annotations['CPM-labels'].value
                                if x != neighbour and
                                node.annotations['CPM-labels'].value[x])
-                if len(others) == 2:
+                if len(others) == len(node.annotations['CPM-labels'].value) - 1:
                     v = label_parent(*others)
                     neighbour.annotations['CPM-labels'].value[node] = v
                     next_wave.add(neighbour)
+        if hashing:
+            # The value can be hashed iff the values are set for all the
+            # neighbouring branches pointing to this node, except maybe the one
+            # with the value to be hashed.
+            # The latter appears to always be set in the tests, but I don't have
+            # a formal proof
+            for neighbour in node.annotations['CPM-labels'].value.keys():
+                count = 0
+                for neighbour2 in node.annotations['CPM-labels'].value.keys():
+                    if neighbour2 == neighbour:
+                        continue
+                    if neighbour2.annotations['CPM-labels'].value[node]:
+                        count += 1
+                if count >= len(node.annotations['CPM-labels'].value.keys()) -1\
+                        and not isinstance(
+                        node.annotations['CPM-labels'].value[neighbour], str):
+                    node.annotations['CPM-labels'].value[neighbour] = md5(str(
+                        node.annotations['CPM-labels'].value[neighbour]).encode(
+                        encoding='utf-8')).hexdigest()
     return tuple(next_wave)
     
 
-def annotate_unrooted_tree(tree):
+def annotate_unrooted_tree(tree, hashing=False):
     """
     Annotate a tree with three labels per node.
     :param tree: 
@@ -163,7 +182,7 @@ def annotate_unrooted_tree(tree):
     wave = tuple(parents)
     cont = True
     while cont:
-        next_wave = _process_node_wave(wave)
+        next_wave = _process_node_wave(wave, hashing=hashing)
         if len(next_wave) > 0:
             wave = next_wave
         else:
@@ -183,7 +202,7 @@ def get_unrooted_vector(tree, hashing=False):
     :return: 
     """
     if not tree.seed_node.annotations['CPM-labels'].value == -1:
-        annotate_unrooted_tree(tree)
+        annotate_unrooted_tree(tree, hashing=hashing)
     r = []
     for node in tree.preorder_node_iter():
         if node is not tree.seed_node:

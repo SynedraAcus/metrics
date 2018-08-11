@@ -45,7 +45,7 @@ def test_unrooted_labels(tree):
     
 def test_hashed_labels(tree):
     assert vector_dict(get_rooted_vector(tree, hashing=True)) ==\
-           vector_dict(['c4ca4238a0b923820dcc509a6f75849b',
+       vector_dict(['c4ca4238a0b923820dcc509a6f75849b',
        'c4ca4238a0b923820dcc509a6f75849b', 'c4ca4238a0b923820dcc509a6f75849b',
        'c4ca4238a0b923820dcc509a6f75849b', 'c4ca4238a0b923820dcc509a6f75849b',
        'c4ca4238a0b923820dcc509a6f75849b', 'c4ca4238a0b923820dcc509a6f75849b',
@@ -55,8 +55,8 @@ def test_hashed_labels(tree):
        'a87ff679a2f3e71d9181a67b7542122c', '6512bd43d9caa6e02c990b0a82652dca'])
     assert get_root_label(tree, hashing=True) ==\
            '6512bd43d9caa6e02c990b0a82652dca'
-    assert get_unrooted_vector(tree, hashing=True) ==\
-           ['c4ca4238a0b923820dcc509a6f75849b',
+    assert vector_dict(get_unrooted_vector(tree, hashing=True)) ==\
+        vector_dict(['c4ca4238a0b923820dcc509a6f75849b',
         'c4ca4238a0b923820dcc509a6f75849b', 'c4ca4238a0b923820dcc509a6f75849b',
         'c4ca4238a0b923820dcc509a6f75849b', 'c4ca4238a0b923820dcc509a6f75849b',
         'c4ca4238a0b923820dcc509a6f75849b', 'c4ca4238a0b923820dcc509a6f75849b',
@@ -69,7 +69,7 @@ def test_hashed_labels(tree):
         'a5771bce93e200c36f7cd9dfd0e5deaa', 'a5771bce93e200c36f7cd9dfd0e5deaa',
         'a5771bce93e200c36f7cd9dfd0e5deaa', 'a5771bce93e200c36f7cd9dfd0e5deaa',
         'a5771bce93e200c36f7cd9dfd0e5deaa', 'a5771bce93e200c36f7cd9dfd0e5deaa',
-        'a5771bce93e200c36f7cd9dfd0e5deaa']
+        'a5771bce93e200c36f7cd9dfd0e5deaa'])
     
 
 

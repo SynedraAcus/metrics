@@ -6,7 +6,7 @@ import pytest
 from dendropy import Tree
 from gmpy2 import mpz
 from metrics import label_parent, get_rooted_vector, get_root_label, \
-    get_unrooted_vector
+    get_unrooted_vector, vector_dict
 
 
 @pytest.fixture
@@ -44,15 +44,15 @@ def test_unrooted_labels(tree):
     
     
 def test_hashed_labels(tree):
-    assert get_rooted_vector(tree, hashing=True) ==\
-           ['c4ca4238a0b923820dcc509a6f75849b',
+    assert vector_dict(get_rooted_vector(tree, hashing=True)) ==\
+           vector_dict(['c4ca4238a0b923820dcc509a6f75849b',
        'c4ca4238a0b923820dcc509a6f75849b', 'c4ca4238a0b923820dcc509a6f75849b',
        'c4ca4238a0b923820dcc509a6f75849b', 'c4ca4238a0b923820dcc509a6f75849b',
        'c4ca4238a0b923820dcc509a6f75849b', 'c4ca4238a0b923820dcc509a6f75849b',
        'c4ca4238a0b923820dcc509a6f75849b', 'c81e728d9d4c2f636f067f89cc14862c',
        'c81e728d9d4c2f636f067f89cc14862c', 'c81e728d9d4c2f636f067f89cc14862c',
        'c81e728d9d4c2f636f067f89cc14862c', 'a87ff679a2f3e71d9181a67b7542122c',
-       'a87ff679a2f3e71d9181a67b7542122c', '6512bd43d9caa6e02c990b0a82652dca']
+       'a87ff679a2f3e71d9181a67b7542122c', '6512bd43d9caa6e02c990b0a82652dca'])
     assert get_root_label(tree, hashing=True) ==\
            '6512bd43d9caa6e02c990b0a82652dca'
     assert get_unrooted_vector(tree, hashing=True) ==\

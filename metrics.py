@@ -7,15 +7,9 @@ stored in node.
 from collections import defaultdict, deque
 from dendropy import Tree
 from gmpy2 import mpz, to_binary
+from hashlib import md5
 from math import sqrt
-import hashlib
 
-
-# CAVEAT FOR HASHING:
-# Hashes computed on different machines can be incompatible because of the
-# endianness issues in gmpy2. It's safer not to rely on hashes provided from
-# elsewhere, instead taking trees as the input and calculating hashes
-# (if needed) on the fly.
 
 def label_parent(k, j):
     """
@@ -33,7 +27,7 @@ def annotate_rooted_tree(tree, hashing=False):
     metric (precisely as in the paper)
     Modifies the tree object passed to it, returns nothing
     :param tree: A tree to be annotated
-    :param hashing: Boolean. If True, the labels are set to SHA256 hashes of the
+    :param hashing: Boolean. If True, the labels are set to MD5 hashes of the
     CP-labels instead of the labels themselves. This is useful for large trees
     where labels get prohibitively high.
     :return:
@@ -47,19 +41,18 @@ def annotate_rooted_tree(tree, hashing=False):
             label = label_parent(k, j)
             node.annotations['CP-label'].value = label
             if hashing:
-                # Hashing children values using SHA256 if necessary
+                # Hashing children values using MD5 if necessary
                 # The children values are not gonna be necessary anymore if the
                 # current node value was set
-                for child in node.child_nodes:
+                for child in node.child_nodes():
                     child.annotations['CP-label'].value =\
-                        hashlib.sha256(to_binary(child.annotations['CP-label'])
-                                       ).hexdigest()
+                            md5(str(child.annotations['CP-label'].value).
+                                encode(encoding='utf-8')).hexdigest()
     # Hashing root separately because it has no parent
     if hashing:
         tree.seed_node.annotations['CP-label'].value = \
-                        hashlib.sha256(to_binary
-                                       (tree.seed_node.annotations['CP-label'])
-                                       ).hexdigest()
+            md5(str(tree.seed_node.annotations['CP-label'].value).encode(
+                encoding='utf-8')).hexdigest()
 
 
 def get_root_label(tree, hashing=False):
@@ -74,7 +67,7 @@ def get_root_label(tree, hashing=False):
     if r:
         return r
     else:
-        annotate_rooted_tree(tree)
+        annotate_rooted_tree(tree, hashing=hashing)
         return tree.seed_node.annotations['CP-label'].value
 
 
@@ -86,7 +79,7 @@ def get_rooted_vector(tree, hashing=False):
     :return: 
     """
     if not tree.seed_node.annotations['CP-label'].value:
-        annotate_rooted_tree(tree)
+        annotate_rooted_tree(tree, hashing=hashing)
     r = []
     for node in tree.postorder_node_iter():
         r.append(node.annotations['CP-label'].value)

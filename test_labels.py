@@ -1,6 +1,6 @@
-#! /usr/bin/env python3
-
-# A pytest-compatible test suite for metrics.py
+"""
+A pytest-compatible test suite for metrics.py
+"""
 
 import pytest
 from dendropy import Tree

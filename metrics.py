@@ -62,11 +62,12 @@ def annotate_rooted_tree(tree, hashing=False):
                                        ).hexdigest()
 
 
-def get_root_label(tree):
+def get_root_label(tree, hashing=False):
     """
     Return the root value of a tree.
     If not annotated, annotate it first
-    :param tree: 
+    :param tree: A tree whose label is to be produced
+    :param hashing: if True, return MD5 hash of the label
     :return: 
     """
     r = tree.seed_node.annotations['CP-label'].value
@@ -77,10 +78,11 @@ def get_root_label(tree):
         return tree.seed_node.annotations['CP-label'].value
 
 
-def get_rooted_vector(tree):
+def get_rooted_vector(tree, hashing=False):
     """
     For an annotated rooted tree, collect labels into a vector
-    :param tree: 
+    :param tree: a tree whose label vector is to be produced
+    :param hashing: if True, return MD5s of labels
     :return: 
     """
     if not tree.seed_node.annotations['CP-label'].value:
@@ -183,11 +185,12 @@ def annotate_unrooted_tree(tree):
     root.annotations['CPM-labels'].value = -1
 
 
-def get_unrooted_vector(tree):
+def get_unrooted_vector(tree, hashing=False):
     """
     Collect labels from an unrooted tree.
     Skips seed node as in the unrooted case it's not a real node, but implement
-    :param tree: 
+    :param tree: a tree whose labels are to be returned
+    :param hashing: if True, return MD5s of labels
     :return: 
     """
     if not tree.seed_node.annotations['CPM-labels'].value == -1:

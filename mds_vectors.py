@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 from glob import glob
 from collections import OrderedDict
 from gmpy2 import mpz
-from metrics import euclidean
+from metrics import euclidean, vector_dict
 from multiprocessing import Pool
 from sklearn import manifold
 import os
@@ -17,14 +17,7 @@ def dict_from_file(file):
     :param file:
     :return:
     """
-    r = {}
-    for line in open(file):
-        v = mpz(line)
-        if v in r:
-            r[v] += 1
-        else:
-            r[v] = 1
-    return r
+    return vector_dict((x. rstrip() for x in open(file)))
 
   
 def dist_between_files(index1, index2, file1, file2, process_zeroes):

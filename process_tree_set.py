@@ -9,7 +9,7 @@ from sys import stderr
 from time import time
 
 
-def write_tree(tree, func, filename):
+def write_tree(tree, func, filename, hashing):
     """
     Get a vector for a given tree and write it into a file.
     :param tree:
@@ -17,7 +17,7 @@ def write_tree(tree, func, filename):
     """
     # Unpacking an argument tuple. Which is a tuple because of Pool.map()
     start = time()
-    func(tree)
+    func(tree, hashing=hashing)
     with open(filename, mode='w') as outfile:
         for node in tree.preorder_node_iter():
             if func == annotate_unrooted_tree:
@@ -41,6 +41,8 @@ parser = ArgumentParser('Return CP- or CPM-vectors for a set of trees\n'+
 parser.add_argument('-t', type=str, help='Tree file in Newick format')
 parser.add_argument('-u', action='store_true',
                     help='Produce unrooted (CPM) labelling')
+parser.add_argument('--hash', action='store_true',
+                    help='Produce hashed labelling')
 parser.add_argument('--processes', type=int, default=0,
                     help='Number of processes. Defaults to processor number')
 args = parser.parse_args()
@@ -53,7 +55,7 @@ trees = TreeList.get_from_path(args.t, schema='newick')
 print('Loaded {} trees'.format(len(trees)), file=stderr)
 counter = 0
 f = args.u and annotate_unrooted_tree or annotate_rooted_tree
-func_args = [(trees[i], f, file_mask.format(str(i))) for i in range(len(trees))]
+func_args = [(trees[i], f, file_mask.format(str(i)), args.hash) for i in range(len(trees))]
 p = Pool(process_count)
 _ = p.starmap(write_tree, func_args, chunksize=1)
 print('Processed {} trees in {} seconds using {} processes'.format(

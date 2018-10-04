@@ -4,12 +4,13 @@ The basic idea is from "Metric on phylogenetic tree shapes". All the labels are
 stored in node.
 """
 
-from collections import defaultdict, deque
-from dendropy import Tree
-from gmpy2 import mpz, to_binary
+from collections import defaultdict
+from gmpy2 import mpz
 from hashlib import md5
 from math import sqrt
-from networkx import DiGraph, topological_sort, is_directed_acyclic_graph
+
+from dendropy import Tree
+from networkx import DiGraph, topological_sort
 
 
 def label_parent(k, j):
@@ -300,10 +301,8 @@ def label_graph_annotation(tree, hashing = True):
                                            encode(encoding='utf-8')).hexdigest()
                 # If the node is not a parent, hash itself
                 if list(label_graph.successors(label_node)) == []:
-                    print(label_node.value)
                     label_node.value = md5(str(label_node.value).
                                            encode(encoding='utf-8')).hexdigest()
-                    print(label_node.value)
 
     ### Walk over the tree the third time, collecting values from nodes
     #TODO: Discard nodes on the tree for memory saving and general clarity

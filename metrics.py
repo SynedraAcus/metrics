@@ -248,8 +248,10 @@ def build_label_graph(tree, hashing = True):
     root = tree.seed_node
     a, b = root.child_nodes()
     a.annotations['CPM-nodes'].value[b] = a.annotations['CPM-nodes'].value[root]
+    a.annotations['CPM-nodes'].value[b].target_node = b
     del(a.annotations['CPM-nodes'].value[root])
     b.annotations['CPM-nodes'].value[a] = b.annotations['CPM-nodes'].value[root]
+    b.annotations['CPM-nodes'].value[a].target_node = a
     del(b.annotations['CPM-nodes'].value[root])
     # Populating the initial CPM labels for leaf parents
     for node in tree.leaf_node_iter():
@@ -269,18 +271,12 @@ def build_label_graph(tree, hashing = True):
             for other_node in label_node.target_node.annotations['CPM-nodes'].value.values():
                 if other_node.target_node is not node:
                     label_graph.add_edge(other_node, label_node)
-        # for neighbour in node.annotations['CPM-nodes'].value:
-        #     if neighbour is tree.seed_node:
-        #         continue
-        #     label_graph.add_node(node.annotations['CPM-nodes'].value[neighbour])
-        #     label_graph.add_edge(node.annotations['CPM-nodes'].value[neighbour],
-        #                          neighbour.annotations['CPM-nodes'].value[node])
+
     ### Traverse the graph, calculating values in nodes
     for label_node in topological_sort(label_graph):
         # Try and set value for self. Check if parents can be hashed
         if label_node.value is None:
             parents = tuple(label_graph.predecessors(label_node))
-            print(parents)
             label_node.value = label_parent(parents[0].value, parents[1].value)
             # if hashing:
             #     for parent in label_graph.predecessors(label_node):
@@ -294,19 +290,22 @@ def build_label_graph(tree, hashing = True):
             #                                encode(encoding='utf-8')).hexdigest()
     for label_node in topological_sort(label_graph):
         print(label_node.value)
-
-
-
-
-
     ### Walk over the tree the third time, collecting values from nodes
+    ### Discard graph and nodes on the tree for memory saving
+    for node in not tree.postorder_node_iter():
+        if node is tree.seed_node:
+            node.annotations['CPM-labels'] = -1
+        else:
+            node.annotations['CPM-labels'] =\
+                {x: node.annotations['CPM-nodes'].value[x].value
+                 for x in node.annotations['CPM-nodes']}
+            del(node.annotations['CPM-nodes'])
+        print(node.annotations['CPM-labels'].value.values())
 
-    ### Discard graph and nodes on the tree for memory savings
 
 
 
-
-        # Operations on vectors
+# Operations on vectors
 def vector_dict(vector):
     """
     Return a vector dictionary.

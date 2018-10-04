@@ -9,6 +9,7 @@ from dendropy import Tree
 from gmpy2 import mpz, to_binary
 from hashlib import md5
 from math import sqrt
+from networkx import DiGraph, dfs_preorder_nodes
 
 
 def label_parent(k, j):
@@ -196,11 +197,13 @@ def annotate_unrooted_tree(tree, hashing=False):
 def get_unrooted_vector(tree, hashing=False):
     """
     Collect labels from an unrooted tree.
-    Skips seed node as in the unrooted case it's not a real node, but implement
+    Skips seed node as in the unrooted case it's not a real node, but a hack
+    in the denropy Tree implementation.
     :param tree: a tree whose labels are to be returned
     :param hashing: if True, return MD5s of labels
     :return: 
     """
+    #TODO: Support both markup algorithms through this function
     if not tree.seed_node.annotations['CPM-labels'].value == -1:
         annotate_unrooted_tree(tree, hashing=hashing)
     r = []
@@ -210,7 +213,78 @@ def get_unrooted_vector(tree, hashing=False):
     return list(sorted(r))
 
 
-# Operations on vectors
+# Label graph-based unrooted markup
+
+
+class LabelGraphNode:
+    """
+    A node for label graph. Has a home node, a target node, and a value
+    """
+    def __init__(self, home_node, target_node, value=None):
+        self.home_node = home_node
+        self.target_node = target_node
+        self.value = value
+
+    def __hash__(self):
+        # A tuple of nodes is good enough for a unique label graph node
+        return hash((self.home_node, self.target_node))
+
+
+def build_label_graph(tree):
+    """
+    Build a label graph such that every label corresponds to a node and
+    the labels that require other labels to be built are their descendants.
+    :param tree: a Tree that has CPM-labels markup
+    :return:
+    """
+    ### Walk over a tree, hanging graph nodes on their corresponding tree nodes
+    for node in tree.preorder_node_iter():
+        if not node.annotations['CPM-nodes'].value:
+            node.annotations['CPM-nodes'].value = {
+                    x: LabelGraphNode(node, x, 0)
+                    for x in get_neighbours(node)}
+    # A hack around a root node, which does not really exist, but which dendropy
+    # creates anyway.
+    root = tree.seed_node
+    a, b = root.child_nodes()
+    a.annotations['CPM-nodes'].value[b] = a.annotations['CPM-nodes'].value[root]
+    del(a.annotations['CPM-nodes'].value[root])
+    b.annotations['CPM-nodes'].value[a] = b.annotations['CPM-nodes'].value[root]
+    del(b.annotations['CPM-nodes'].value[root])
+    # Populating the initial CPM labels for leaf parents
+    parents = set()
+    for node in tree.leaf_node_iter():
+        # Each node should have only one parent, but these being dicts I cannot
+        # just address neighbours[0]
+        for parent in node.annotations['CPM-nodes'].value:
+            parent.annotations['CPM-nodes'].value[node].value = mpz(1)
+
+    ### Walk over the tree again, collecting nodes and assembling them to a graph
+    ### Necessary so that all nodes do exist by the time a graph is assembled
+    label_graph = DiGraph()
+    for node in tree.preorder_node_iter():
+        if node is tree.seed_node:
+            continue
+        for neighbour in get_neighbours(node):
+            if neighbour is tree.seed_node:
+                continue
+            label_graph.add_node(node.annotations['CPM-nodes'].value[neighbour])
+            label_graph.add_edge(node.annotations['CPM-nodes'].value[neighbour],
+                                 neighbour.annotations['CPM-nodes'].value[node])
+
+    ### Traverse the graph, calculating values in nodes
+    for label_node in dfs_preorder_nodes(label_graph):
+
+
+
+    ### Walk over the tree the third time, collecting values from nodes
+
+    ### Discard graph and nodes on the tree for memory savings
+
+
+
+
+        # Operations on vectors
 def vector_dict(vector):
     """
     Return a vector dictionary.

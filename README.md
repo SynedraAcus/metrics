@@ -3,10 +3,13 @@
 This repo is a Python3 reimplementation of the distance metric between tree
 topologies proposed in
 [Colijn and Plazotta, 2018](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5790134/),
-as well as the (yet) unpublished extension of this metric to unrooted trees. The current
-implementation does not provide the hashing-based optimization, so the files
-and RAM requirements can be extremely high (as in gigabytes per tree) for trees
-with more than about a hundred leaves.
+as well as the (yet) unpublished extension of this metric to unrooted trees.
+
+The hashing-based optimization is provided for both rooted and unrooted
+versions. If used, the numeric labels are replaced with their md5 hashes.
+Although this optimization comes with a risk of collision, it is highly
+recommended for trees of more than about 100 leaves. Without it, the memory
+requirements grow extremely quickly.
 
 ### Dependencies
 

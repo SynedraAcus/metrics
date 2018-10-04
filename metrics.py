@@ -94,11 +94,12 @@ def get_rooted_vector(tree, hashing=False):
 def get_unrooted_vector(tree, hashing=False, annotation_method='graph'):
     """
     Collect labels from an unrooted tree.
-    Skips seed node as in the unrooted case it's not a real node, but a hack
-    in the denropy Tree implementation.
+    If the tree was not labeled before, it is labelled using the method supplied
+    in the `annotation_method` kwarg.
     :param tree: a tree whose labels are to be returned
     :param hashing: if True, return MD5s of labels
-    :param annotation_method: either 'wave' or 'graph'
+    :param annotation_method: either 'wave' or 'graph'. 'graph' is faster, but
+    requires networkx.
     :return:
     """
     functions = {'graph': label_graph_annotation,
@@ -174,6 +175,8 @@ def _process_node_wave(wave, hashing=False):
 def wave_traversal_annotation(tree, hashing=False):
     """
     Annotate a tree with three labels per node.
+    Uses a wave traversal algorithm which is, frankly, an ugly bunch of hacks.
+    Not recommended except when networkx is unavailable.
     :param tree: 
     :return: 
     """
@@ -237,7 +240,8 @@ class LabelGraphNode:
 
 def label_graph_annotation(tree, hashing = True):
     """
-    Build a label graph such that every label corresponds to a node and
+    Annotate the tree using label graph.
+    It's a graph such that every CPM label corresponds to a node and
     the labels that require other labels to be built are their descendants.
     :param tree: a Tree that has CPM-labels markup
     :return:
@@ -301,7 +305,6 @@ def label_graph_annotation(tree, hashing = True):
                                            encode(encoding='utf-8')).hexdigest()
                     print(label_node.value)
 
-
     ### Walk over the tree the third time, collecting values from nodes
     #TODO: Discard nodes on the tree for memory saving and general clarity
     for node in tree.postorder_node_iter():
@@ -311,8 +314,6 @@ def label_graph_annotation(tree, hashing = True):
             node.annotations['CPM-labels'] =\
                 {x: node.annotations['CPM-nodes'].value[x].value
                  for x in node.annotations['CPM-nodes'].value}
-
-
 
 
 # Operations on vectors

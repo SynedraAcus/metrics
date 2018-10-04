@@ -9,7 +9,7 @@ from dendropy import Tree
 from gmpy2 import mpz, to_binary
 from hashlib import md5
 from math import sqrt
-from networkx import DiGraph, dfs_preorder_nodes
+from networkx import DiGraph, topological_sort, is_directed_acyclic_graph
 
 
 def label_parent(k, j):
@@ -230,7 +230,7 @@ class LabelGraphNode:
         return hash((self.home_node, self.target_node))
 
 
-def build_label_graph(tree):
+def build_label_graph(tree, hashing = True):
     """
     Build a label graph such that every label corresponds to a node and
     the labels that require other labels to be built are their descendants.
@@ -241,7 +241,7 @@ def build_label_graph(tree):
     for node in tree.preorder_node_iter():
         if not node.annotations['CPM-nodes'].value:
             node.annotations['CPM-nodes'].value = {
-                    x: LabelGraphNode(node, x, 0)
+                    x: LabelGraphNode(node, x)
                     for x in get_neighbours(node)}
     # A hack around a root node, which does not really exist, but which dendropy
     # creates anyway.
@@ -252,7 +252,6 @@ def build_label_graph(tree):
     b.annotations['CPM-nodes'].value[a] = b.annotations['CPM-nodes'].value[root]
     del(b.annotations['CPM-nodes'].value[root])
     # Populating the initial CPM labels for leaf parents
-    parents = set()
     for node in tree.leaf_node_iter():
         # Each node should have only one parent, but these being dicts I cannot
         # just address neighbours[0]
@@ -262,18 +261,41 @@ def build_label_graph(tree):
     ### Walk over the tree again, collecting nodes and assembling them to a graph
     ### Necessary so that all nodes do exist by the time a graph is assembled
     label_graph = DiGraph()
-    for node in tree.preorder_node_iter():
+    for node in tree.postorder_node_iter():
         if node is tree.seed_node:
             continue
-        for neighbour in get_neighbours(node):
-            if neighbour is tree.seed_node:
-                continue
-            label_graph.add_node(node.annotations['CPM-nodes'].value[neighbour])
-            label_graph.add_edge(node.annotations['CPM-nodes'].value[neighbour],
-                                 neighbour.annotations['CPM-nodes'].value[node])
-
+        for label_node in node.annotations['CPM-nodes'].value.values():
+            label_graph.add_node(label_node)
+            for other_node in label_node.target_node.annotations['CPM-nodes'].value.values():
+                if other_node.target_node is not node:
+                    label_graph.add_edge(other_node, label_node)
+        # for neighbour in node.annotations['CPM-nodes'].value:
+        #     if neighbour is tree.seed_node:
+        #         continue
+        #     label_graph.add_node(node.annotations['CPM-nodes'].value[neighbour])
+        #     label_graph.add_edge(node.annotations['CPM-nodes'].value[neighbour],
+        #                          neighbour.annotations['CPM-nodes'].value[node])
     ### Traverse the graph, calculating values in nodes
-    for label_node in dfs_preorder_nodes(label_graph):
+    for label_node in topological_sort(label_graph):
+        # Try and set value for self. Check if parents can be hashed
+        if label_node.value is None:
+            parents = tuple(label_graph.predecessors(label_node))
+            print(parents)
+            label_node.value = label_parent(parents[0].value, parents[1].value)
+            # if hashing:
+            #     for parent in label_graph.predecessors(label_node):
+            #         can_hash = True
+            #         for child in label_graph.successors(parent):
+            #             if child.value is None:
+            #                 can_hash = False
+            #                 break
+            #         if can_hash:
+            #             parent.value = md5(str(parent.value).
+            #                                encode(encoding='utf-8')).hexdigest()
+    for label_node in topological_sort(label_graph):
+        print(label_node.value)
+
+
 
 
 

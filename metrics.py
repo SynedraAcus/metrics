@@ -90,6 +90,28 @@ def get_rooted_vector(tree, hashing=False):
 
 # Unrooted version
 
+
+def get_unrooted_vector(tree, hashing=False, annotation_method='graph'):
+    """
+    Collect labels from an unrooted tree.
+    Skips seed node as in the unrooted case it's not a real node, but a hack
+    in the denropy Tree implementation.
+    :param tree: a tree whose labels are to be returned
+    :param hashing: if True, return MD5s of labels
+    :param annotation_method: either 'wave' or 'graph'
+    :return:
+    """
+    functions = {'graph': label_graph_annotation,
+                 'wave': wave_traversal_annotation}
+    if not tree.seed_node.annotations['CPM-labels'].value == -1:
+        functions[annotation_method](tree, hashing=hashing)
+    r = []
+    for node in tree.preorder_node_iter():
+        if node is not tree.seed_node:
+            r += list(node.annotations['CPM-labels'].value.values())
+    return list(sorted(r))
+
+
 def get_neighbours(node):
     """
     Get neighbours for a node
@@ -102,6 +124,8 @@ def get_neighbours(node):
     if node.parent_node:
         r.append(node.parent_node)
     return r
+
+#  Two functions that define the wave traversal unrooted labeling
 
 
 def _process_node_wave(wave, hashing=False):
@@ -147,7 +171,7 @@ def _process_node_wave(wave, hashing=False):
     return tuple(next_wave)
     
 
-def annotate_unrooted_tree(tree, hashing=False):
+def wave_traversal_annotation(tree, hashing=False):
     """
     Annotate a tree with three labels per node.
     :param tree: 
@@ -194,26 +218,7 @@ def annotate_unrooted_tree(tree, hashing=False):
     root.annotations['CPM-labels'].value = -1
 
 
-def get_unrooted_vector(tree, hashing=False):
-    """
-    Collect labels from an unrooted tree.
-    Skips seed node as in the unrooted case it's not a real node, but a hack
-    in the denropy Tree implementation.
-    :param tree: a tree whose labels are to be returned
-    :param hashing: if True, return MD5s of labels
-    :return: 
-    """
-    #TODO: Support both markup algorithms through this function
-    if not tree.seed_node.annotations['CPM-labels'].value == -1:
-        annotate_unrooted_tree(tree, hashing=hashing)
-    r = []
-    for node in tree.preorder_node_iter():
-        if node is not tree.seed_node:
-            r += list(node.annotations['CPM-labels'].value.values())
-    return list(sorted(r))
-
-
-# Label graph-based unrooted markup
+# Label graph-based unrooted labeling
 
 
 class LabelGraphNode:
@@ -230,7 +235,7 @@ class LabelGraphNode:
         return hash((self.home_node, self.target_node))
 
 
-def build_label_graph(tree, hashing = True):
+def label_graph_annotation(tree, hashing = True):
     """
     Build a label graph such that every label corresponds to a node and
     the labels that require other labels to be built are their descendants.
@@ -288,19 +293,15 @@ def build_label_graph(tree, hashing = True):
             #         if can_hash:
             #             parent.value = md5(str(parent.value).
             #                                encode(encoding='utf-8')).hexdigest()
-    for label_node in topological_sort(label_graph):
-        print(label_node.value)
     ### Walk over the tree the third time, collecting values from nodes
-    ### Discard graph and nodes on the tree for memory saving
-    for node in not tree.postorder_node_iter():
+    #TODO: Discard nodes on the tree for memory saving and general clarity
+    for node in tree.postorder_node_iter():
         if node is tree.seed_node:
             node.annotations['CPM-labels'] = -1
         else:
             node.annotations['CPM-labels'] =\
                 {x: node.annotations['CPM-nodes'].value[x].value
-                 for x in node.annotations['CPM-nodes']}
-            del(node.annotations['CPM-nodes'])
-        print(node.annotations['CPM-labels'].value.values())
+                 for x in node.annotations['CPM-nodes'].value}
 
 
 

@@ -1,12 +1,14 @@
 #! /usr/bin/env python3.6
 
 from argparse import ArgumentParser
-from dendropy import TreeList
-from metrics import annotate_rooted_tree, annotate_unrooted_tree
 from multiprocessing import Pool
 from os import getpid, cpu_count
 from sys import stderr
 from time import time
+
+from dendropy import TreeList
+
+from metrics import annotate_rooted_tree, label_graph_annotation
 
 
 def write_tree(tree, func, filename, hashing):
@@ -20,7 +22,7 @@ def write_tree(tree, func, filename, hashing):
     func(tree, hashing=hashing)
     with open(filename, mode='w') as outfile:
         for node in tree.preorder_node_iter():
-            if func == annotate_unrooted_tree:
+            if func == label_graph_annotation:
                 if not isinstance(node.annotations['CPM-labels'].value, int):
                     # The int thing is for skipping the root value
                     for key in node.annotations['CPM-labels'].value:
@@ -54,7 +56,7 @@ file_mask = args.t.split('.')[0]+'_tree{}.vector'
 trees = TreeList.get_from_path(args.t, schema='newick')
 print('Loaded {} trees'.format(len(trees)), file=stderr)
 counter = 0
-f = args.u and annotate_unrooted_tree or annotate_rooted_tree
+f = args.u and label_graph_annotation or annotate_rooted_tree
 func_args = [(trees[i], f, file_mask.format(str(i)), args.hash) for i in range(len(trees))]
 p = Pool(process_count)
 _ = p.starmap(write_tree, func_args, chunksize=1)

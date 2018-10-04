@@ -282,17 +282,26 @@ def label_graph_annotation(tree, hashing = True):
         # Try and set value for self. Check if parents can be hashed
         if label_node.value is None:
             parents = tuple(label_graph.predecessors(label_node))
+            # There are, by definition, two parents for each non-parentless node
             label_node.value = label_parent(parents[0].value, parents[1].value)
-            # if hashing:
-            #     for parent in label_graph.predecessors(label_node):
-            #         can_hash = True
-            #         for child in label_graph.successors(parent):
-            #             if child.value is None:
-            #                 can_hash = False
-            #                 break
-            #         if can_hash:
-            #             parent.value = md5(str(parent.value).
-            #                                encode(encoding='utf-8')).hexdigest()
+            if hashing:
+                # Try and hash node's parents
+                for parent in parents:
+                    can_hash = True
+                    for child in label_graph.successors(parent):
+                        if child.value is None:
+                            can_hash = False
+                    if can_hash:
+                        parent.value = md5(str(parent.value).
+                                           encode(encoding='utf-8')).hexdigest()
+                # If the node is not a parent, hash itself
+                if list(label_graph.successors(label_node)) == []:
+                    print(label_node.value)
+                    label_node.value = md5(str(label_node.value).
+                                           encode(encoding='utf-8')).hexdigest()
+                    print(label_node.value)
+
+
     ### Walk over the tree the third time, collecting values from nodes
     #TODO: Discard nodes on the tree for memory saving and general clarity
     for node in tree.postorder_node_iter():

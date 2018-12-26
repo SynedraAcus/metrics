@@ -2,9 +2,11 @@
 A pytest-compatible test suite for metrics.py
 """
 
+from gmpy2 import mpz
+
 import pytest
 from dendropy import Tree
-from gmpy2 import mpz
+
 from metrics import label_parent, get_rooted_vector, get_root_label, \
     get_unrooted_vector, vector_dict
 
@@ -90,6 +92,25 @@ def test_wave_unrooted_hashed_labels(tree):
 def test_graph_unrooted_hashed_labels(tree):
     assert vector_dict(get_unrooted_vector(tree, hashing=True,
                                            annotation_method='graph')) == \
+        vector_dict(['c4ca4238a0b923820dcc509a6f75849b',
+        'c4ca4238a0b923820dcc509a6f75849b', 'c4ca4238a0b923820dcc509a6f75849b',
+        'c4ca4238a0b923820dcc509a6f75849b', 'c4ca4238a0b923820dcc509a6f75849b',
+        'c4ca4238a0b923820dcc509a6f75849b', 'c4ca4238a0b923820dcc509a6f75849b',
+        'c4ca4238a0b923820dcc509a6f75849b', 'c81e728d9d4c2f636f067f89cc14862c',
+        'c81e728d9d4c2f636f067f89cc14862c', 'c81e728d9d4c2f636f067f89cc14862c',
+        'c81e728d9d4c2f636f067f89cc14862c', 'a87ff679a2f3e71d9181a67b7542122c',
+        'a87ff679a2f3e71d9181a67b7542122c', '45c48cce2e2d7fbdea1afc51c7c6ad26',
+        '45c48cce2e2d7fbdea1afc51c7c6ad26', '45c48cce2e2d7fbdea1afc51c7c6ad26',
+        '45c48cce2e2d7fbdea1afc51c7c6ad26', 'a5771bce93e200c36f7cd9dfd0e5deaa',
+        'a5771bce93e200c36f7cd9dfd0e5deaa', 'a5771bce93e200c36f7cd9dfd0e5deaa',
+        'a5771bce93e200c36f7cd9dfd0e5deaa', 'a5771bce93e200c36f7cd9dfd0e5deaa',
+        'a5771bce93e200c36f7cd9dfd0e5deaa', 'a5771bce93e200c36f7cd9dfd0e5deaa',
+        'a5771bce93e200c36f7cd9dfd0e5deaa'])
+
+
+def test_leaf_unrooted_hashed_labels(tree):
+    assert vector_dict(get_unrooted_vector(tree, hashing=True,
+                                           annotation_method='leaf')) == \
         vector_dict(['c4ca4238a0b923820dcc509a6f75849b',
         'c4ca4238a0b923820dcc509a6f75849b', 'c4ca4238a0b923820dcc509a6f75849b',
         'c4ca4238a0b923820dcc509a6f75849b', 'c4ca4238a0b923820dcc509a6f75849b',

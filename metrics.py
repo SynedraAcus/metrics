@@ -104,7 +104,8 @@ def get_unrooted_vector(tree, hashing=False, annotation_method='graph'):
     :return:
     """
     functions = {'graph': label_graph_annotation,
-                 'wave': wave_traversal_annotation}
+                 'wave': wave_traversal_annotation,
+                 'leaf': leaf_enumeration_annotation}
     if not tree.seed_node.annotations['CPM-labels'].value == -1:
         functions[annotation_method](tree, hashing=hashing)
     r = []
@@ -245,6 +246,7 @@ def label_graph_annotation(tree, hashing = True):
     It's a graph such that every CPM label corresponds to a node and
     the labels that require other labels to be built are their descendants.
     :param tree: a Tree that has CPM-labels markup
+    :param hashing: if True, return MD5 hashes of labels instead of themselves
     :return:
     """
     ### Walk over a tree, hanging graph nodes on their corresponding tree nodes
@@ -314,6 +316,24 @@ def label_graph_annotation(tree, hashing = True):
                 {x: node.annotations['CPM-nodes'].value[x].value
                  for x in node.annotations['CPM-nodes'].value}
 
+
+def recursive_label(node, direction):
+    """
+    An internal function for leaf_enumeration_annotation
+    :param node:
+    :param direction:
+    :return:
+    """
+    pass
+
+def leaf_enumeration_annotation(tree, hashing=False):
+    """
+    Annotate the unrooted tree using leaf enumeration
+    :param tree: a Tree that has CPM-labels markup
+    :param hashing: if True, return MD5 hashes of labels instead of themselves
+    :return:
+    """
+    pass
 
 # Operations on vectors
 def vector_dict(vector):

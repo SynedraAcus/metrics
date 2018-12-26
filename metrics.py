@@ -112,6 +112,7 @@ def get_unrooted_vector(tree, hashing=False, annotation_method='graph'):
     for node in tree.preorder_node_iter():
         if node is not tree.seed_node:
             r += list(node.annotations['CPM-labels'].value.values())
+    print(r)
     return list(sorted(r))
 
 
@@ -317,23 +318,76 @@ def label_graph_annotation(tree, hashing = True):
                  for x in node.annotations['CPM-nodes'].value}
 
 
-def recursive_label(node, direction):
+def recursive_label(node, direction, hashing):
     """
     An internal function for leaf_enumeration_annotation
+    Essentially a lazy label calculation
     :param node:
     :param direction:
+    :param hashing:
     :return:
     """
-    pass
+    # print(direction)
+    # print(node.annotations)
+    if node.annotations['CPM-labels'].value[direction] is None:
+        next_nodes = [x for x in direction.annotations['CPM-labels'].value if x is not node]
+        node.annotations['CPM-labels'].value[direction] = \
+            label_parent(recursive_label(direction,
+                                         next_nodes[0],
+                                         hashing),
+                         recursive_label(direction,
+                                         next_nodes[1],
+                                         hashing))
+        if hashing:
+            #TODO: Work out the correct hashing check
+            can_hash = True
+            for node2 in next_nodes:
+                if node2.annotations['CPM-labels'].value[direction] is None:
+                    can_hash = False
+            if can_hash:
+                direction.annotations['CPM-labels'].value[node] = md5(str(
+                        direction.annotations['CPM-labels'].value[node]).encode(
+                        encoding='utf-8')).hexdigest()
+    return node.annotations['CPM-labels'].value[direction]
+
 
 def leaf_enumeration_annotation(tree, hashing=False):
     """
-    Annotate the unrooted tree using leaf enumeration
+    Annotate the unrooted tree using leaf enumeration.
+    This approach uses a recursive function, so it may fail if the distance
+    between two furthest nodes in a tree is above recursion limit.
     :param tree: a Tree that has CPM-labels markup
     :param hashing: if True, return MD5 hashes of labels instead of themselves
     :return:
     """
-    pass
+    # Creating correct CPM-labels dicts for each node
+    for node in tree.preorder_node_iter():
+        if not node.annotations['CPM-labels'].value:
+            node.annotations['CPM-labels'].value = {x: None for x in get_neighbours(node)}
+    # A hack around a root node, which does not really exist, but which dendropy
+    # creates anyway.
+    root = tree.seed_node
+    a, b = root.child_nodes()
+    a.annotations['CPM-labels'].value[b] = a.annotations['CPM-labels'].value[root]
+    del (a.annotations['CPM-labels'].value[root])
+    b.annotations['CPM-labels'].value[a] = b.annotations['CPM-labels'].value[root]
+    del (b.annotations['CPM-labels'].value[root])
+    # Populating the initial CPM labels for leaf parents
+    for node in tree.leaf_node_iter():
+        # Each node should have only one parent, but these being dicts I cannot
+        # just address neighbours[0]
+        for parent in node.annotations['CPM-labels'].value:
+            parent.annotations['CPM-labels'].value[node] = mpz(1)
+    # For each leaf, compute the label directed towards the rest of the tree
+    for node in tree.leaf_node_iter():
+        for parent in node.annotations['CPM-labels'].value:
+            recursive_label(node, parent, hashing=hashing)
+            node.annotations['CPM-labels'].value[parent] = md5(str(
+                        node.annotations['CPM-labels'].value[parent]).encode(
+                        encoding='utf-8')).hexdigest()
+
+
+
 
 # Operations on vectors
 def vector_dict(vector):

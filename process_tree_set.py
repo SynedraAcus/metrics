@@ -8,7 +8,7 @@ from time import time
 
 from dendropy import TreeList
 
-from metrics import annotate_rooted_tree, label_graph_annotation
+from metrics import annotate_rooted_tree, label_graph_annotation, leaf_enumeration_annotation
 
 
 def write_tree(tree, func, filename, hashing):
@@ -56,7 +56,7 @@ file_mask = args.t.split('.')[0]+'_tree{}.vector'
 trees = TreeList.get_from_path(args.t, schema='newick')
 print('Loaded {} trees'.format(len(trees)), file=stderr)
 counter = 0
-f = args.u and label_graph_annotation or annotate_rooted_tree
+f = args.u and leaf_enumeration_annotation or annotate_rooted_tree
 func_args = [(trees[i], f, file_mask.format(str(i)), args.hash) for i in range(len(trees))]
 p = Pool(process_count)
 _ = p.starmap(write_tree, func_args, chunksize=1)

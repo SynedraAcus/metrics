@@ -339,15 +339,15 @@ def recursive_label(node, direction, hashing):
                                          next_nodes[1],
                                          hashing))
         if hashing:
-            #TODO: Work out the correct hashing check
-            can_hash = True
-            for node2 in next_nodes:
-                if node2.annotations['CPM-labels'].value[direction] is None:
-                    can_hash = False
-            if can_hash:
-                direction.annotations['CPM-labels'].value[node] = md5(str(
-                        direction.annotations['CPM-labels'].value[node]).encode(
-                        encoding='utf-8')).hexdigest()
+            # Checking if the values in next_nodes are hashable.
+            if next_nodes[0].annotations['CPM-labels'].value[direction] is not None:
+                direction.annotations['CPM-labels'].value[next_nodes[1]] = md5(
+                    str(direction.annotations['CPM-labels'].value[next_nodes[1]]
+                        ).encode(encoding='utf-8')).hexdigest()
+            if next_nodes[1].annotations['CPM-labels'].value[direction] is not None:
+                direction.annotations['CPM-labels'].value[next_nodes[0]] = md5(
+                    str(direction.annotations['CPM-labels'].value[next_nodes[0]]
+                        ).encode(encoding='utf-8')).hexdigest()
     return node.annotations['CPM-labels'].value[direction]
 
 
